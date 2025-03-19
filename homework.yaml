@@ -1,0 +1,48 @@
+- name: Настройка хостов
+  hosts: all  
+  become: yes  
+  vars:
+    packages:
+      - net-tools
+      - git
+      - tree
+      - htop
+      - mc
+      - vim
+    users:
+      - devops_1
+      - test_1
+  tasks:
+    - name: Проверка хостов через ping
+      ansible.builtin.ping:
+
+    - name: Обновление списка пакетов
+      ansible.builtin.apt:
+        update_cache: yes
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Установка необходимых пакетов
+      ansible.builtin.package:
+        name: "{{ packages }}"
+        state: present
+
+    - name: Копирование текстового файла test.txt
+      ansible.builtin.copy:
+        src: ./test.txt
+        dest: /tmp/test.txt
+
+    - name: Создание пользователей и директорий в цикле
+      ansible.builtin.user:
+        name: "{{ item }}"
+        home: "/home/{{ item }}"
+        state: present
+      loop: "{{ users }}"
+
+    - name: Создание домашней директории для пользователей
+      ansible.builtin.file:
+        path: "/home/{{ item }}"
+        state: directory
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: '0755'
+      loop: "{{ users }}"
